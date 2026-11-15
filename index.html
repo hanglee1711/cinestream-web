@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineStream PTI320 - Ứng Dụng Xem Phim</title>
+<style>
+:root{
+  --bg:#121212; --sidebar:#181818; --card:#1e1e1e; --card2:#202020; --border:#282828; --border2:#2d2d2d;
+  --text:#ffffff; --text-dim:#cccccc; --text-dim2:#888888; --accent:#E50914; --accent-hover:#ff1f2e;
+  --gold:#FFD700; --input-bg:#2b2b2b;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;}
+.hidden{display:none !important;}
+button{cursor:pointer;font-family:inherit;}
+
+/* ---------- Auth ---------- */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-card{width:620px;max-width:100%;background:#1a1a1a;border-radius:10px;display:flex;gap:20px;padding:24px;}
+.auth-left{flex:1;display:flex;flex-direction:column;gap:12px;}
+.auth-title{text-align:center;font-size:16px;font-weight:800;color:var(--accent);}
+.auth-right{flex:1;display:flex;flex-direction:column;gap:8px;}
+.auth-right-label{font-weight:700;color:#aaa;font-size:12px;}
+.account-list{background:#2b2b2b;border:1px solid #444;border-radius:5px;padding:5px;flex:1;min-height:160px;overflow-y:auto;}
+.account-item{padding:6px;border-bottom:1px solid #333;cursor:pointer;font-size:13px;}
+.account-item:hover{background:#3a3a3a;}
+.account-item.selected{background:var(--accent);color:#fff;}
+.form-error{min-height:18px;font-size:12px;font-weight:600;color:var(--accent);}
+.form-error.success{color:#2ecc71;}
+
+/* ---------- Inputs / buttons ---------- */
+input,select,textarea{background:var(--input-bg);border:1px solid #444;border-radius:5px;padding:7px;color:#fff;font-family:inherit;font-size:13px;width:100%;}
+input:focus,select:focus{outline:none;border-color:var(--accent);}
+input::placeholder{color:#888;}
+.btn{background:#333333;border:none;border-radius:5px;padding:8px;font-weight:700;font-size:13px;color:#fff;}
+.btn:hover{background:#444;}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent:hover{background:var(--accent-hover);}
+.btn-row{display:flex;gap:8px;}
+.btn-row .btn{flex:1;}
+
+/* ---------- App shell ---------- */
+#appScreen{display:flex;min-height:100vh;}
+.sidebar{width:230px;flex:none;background:var(--sidebar);border-right:1px solid var(--border);padding:20px 15px;display:flex;flex-direction:column;gap:8px;height:100vh;position:sticky;top:0;}
+.sidebar-logo{color:var(--accent);font-size:20px;font-weight:800;text-align:center;padding-bottom:5px;}
+.sidebar-hr{border:none;border-top:1px solid var(--border);margin:0 0 4px;}
+.sidebar-menu-title{color:var(--text-dim2);font-size:11px;letter-spacing:1px;padding-top:10px;font-weight:700;}
+.nav-btn{background:transparent;color:var(--text-dim);font-size:13px;text-align:left;padding:10px 15px;border-radius:6px;border:none;min-height:38px;}
+.nav-btn:hover{background:#262626;color:#fff;}
+.nav-btn.active{background:var(--accent);color:#fff;font-weight:700;}
+.sidebar-spacer{flex:1;}
+.btn-open-file{background-color:#2b2b2b;border:1px solid #444;color:#fff;border-radius:5px;min-height:42px;font-weight:500;}
+.btn-open-file:hover{background:#3b3b3b;border-color:var(--accent);}
+
+.content-area{flex:1;min-width:0;padding:15px 20px;display:flex;flex-direction:column;gap:12px;}
+.topbar{display:flex;gap:10px;min-height:38px;}
+#txtSearch{background:#202020;border:1px solid #333;border-radius:8px;padding:0 15px;height:38px;}
+#txtSearch:focus{border-color:var(--accent);background:#252525;}
+.btn-search-clear{background:#2a2a2a;border:1px solid #383838;border-radius:8px;color:#ccc;min-width:75px;height:38px;}
+.btn-search-clear:hover{background:#3a3a3a;color:#fff;}
+
+.category-header{font-size:18px;font-weight:800;margin-bottom:5px;}
+.movie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px;}
+.movie-card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;min-height:260px;display:flex;flex-direction:column;gap:8px;cursor:pointer;}
+.movie-card:hover{background:#292929;border-color:var(--accent);}
+.mv-poster{min-height:130px;border-radius:8px;border:1px solid #444;display:flex;align-items:center;justify-content:center;position:relative;}
+.mv-emoji{font-size:48px;}
+.mv-badge{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;border-radius:4px;padding:2px 6px;}
+.mv-title{color:#fff;font-weight:700;font-size:14px;}
+.mv-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;}
+.mv-rating{color:var(--accent);font-weight:700;}
+.mv-year{color:var(--text-dim2);}
+.mv-play{background:var(--accent);color:#fff;font-weight:700;border-radius:5px;height:30px;border:none;}
+.mv-play:hover{background:var(--accent-hover);}
+.empty-catalog{color:#888;font-size:15px;text-align:center;margin-top:40px;grid-column:1/-1;}
+
+/* ---------- Player page ---------- */
+.player-header{display:flex;align-items:center;gap:10px;}
+.btn-back{background:#282828;color:#fff;border:1px solid #3d3d3d;border-radius:6px;font-weight:700;min-width:110px;height:34px;}
+.btn-back:hover{background:var(--accent);border-color:var(--accent);}
+.player-movie-title{font-size:17px;font-weight:800;margin-left:10px;flex:1;}
+.btn-fav{background:#282828;color:var(--gold);border:1px solid #3d3d3d;border-radius:6px;font-weight:700;min-width:120px;height:34px;}
+.btn-fav.active{background:var(--gold);color:var(--bg);}
+
+.video-container{background:#000;border-radius:8px;min-height:380px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.video-container video{width:100%;height:100%;max-height:70vh;display:block;}
+
+#sliderProgress{width:100%;}
+input[type=range]{appearance:none;height:6px;background:#333;border-radius:3px;outline:none;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb:hover{background:var(--accent);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:none;cursor:pointer;}
+
+.controls-frame{display:flex;align-items:center;gap:10px;padding:0 5px;flex-wrap:wrap;}
+.ctl-btn{background:#252525;color:#fff;border:1px solid #333;border-radius:6px;font-weight:700;height:34px;padding:0 14px;}
+.ctl-btn:hover{background:var(--accent);border-color:var(--accent);}
+#lblTime{color:#aaa;font-size:12px;white-space:nowrap;}
+.vol-group{display:flex;align-items:center;gap:6px;margin-left:auto;}
+#sliderVolume{width:90px;}
+
+.movie-meta-frame{background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+#lblMovieTags{color:var(--accent);font-size:13px;font-weight:700;margin-bottom:5px;}
+#lblMovieDesc{color:var(--text-dim);font-size:13px;line-height:1.4;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:100%;}
+.modal-title{font-size:15px;font-weight:800;margin:0 0 14px;color:#fff;}
+.modal-msg{color:#ddd;font-size:13px;line-height:1.6;white-space:pre-line;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+@media (max-width:900px){ .sidebar{display:none;} .auth-card{flex-direction:column;} }
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH ===================== -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-left">
+      <div class="auth-title">🎬 ĐĂNG NHẬP</div>
+      <input type="text" id="txtUser" placeholder="Tên đăng nhập...">
+      <input type="password" id="txtPass" placeholder="Mật khẩu...">
+      <div class="btn-row">
+        <button class="btn btn-accent" id="btnLogin">Đăng nhập</button>
+        <button class="btn" id="btnRegister">Đăng ký</button>
+      </div>
+      <div class="form-error" id="authMsg"></div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-right-label">👥 Tài khoản đã có:</div>
+      <div class="account-list" id="accountList"></div>
+      <button class="btn" id="btnDeleteUser" style="background:#444;color:#ff6b6b;">🗑️ Xóa tài khoản đã chọn</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="appScreen" class="hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo">🎬 CINEMA PTI</div>
+    <hr class="sidebar-hr">
+    <div class="sidebar-menu-title">KHÁM PHÁ</div>
+    <button class="nav-btn active" data-cat="all">🍿 Tất cả phim</button>
+    <button class="nav-btn" data-cat="action">💥 Hành động</button>
+    <button class="nav-btn" data-cat="scifi">🚀 Viễn tưởng</button>
+    <button class="nav-btn" data-cat="animation">🎨 Hoạt hình</button>
+    <button class="nav-btn" data-cat="fav">⭐ Yêu thích</button>
+    <div class="sidebar-spacer"></div>
+    <button class="btn-open-file" id="btnOpenFile">📁 Mở video từ máy...</button>
+    <input type="file" id="fileInput" accept="video/*" style="display:none">
+  </aside>
+
+  <div class="content-area">
+    <div class="topbar">
+      <input type="text" id="txtSearch" placeholder="🔍 Tìm kiếm theo tên phim, thể loại, từ khóa...">
+      <button class="btn-search-clear" id="btnSearchClear">Xóa tìm</button>
+    </div>
+
+    <div id="pageCatalog">
+      <div class="category-header" id="lblCategoryHeader">🍿 Tất cả phim nổi bật</div>
+      <div class="movie-grid" id="movieGrid"></div>
+    </div>
+
+    <div id="pagePlayer" class="hidden" style="display:flex;flex-direction:column;gap:8px;">
+      <div class="player-header">
+        <button class="btn-back" id="btnBack">⬅ Quay lại</button>
+        <div class="player-movie-title" id="lblMovieTitle">Tên phim đang phát</div>
+        <button class="btn-fav" id="btnFavToggle">☆ Thêm yêu thích</button>
+      </div>
+      <div class="video-container" id="videoContainer"></div>
+      <input type="range" id="sliderProgress" min="0" max="1000" value="0">
+      <div class="controls-frame">
+        <button class="ctl-btn" id="btnPlayPause">▶ Phát</button>
+        <button class="ctl-btn" id="btnRewind">⏪ -10s</button>
+        <button class="ctl-btn" id="btnForward">⏩ +10s</button>
+        <span id="lblTime">00:00 / 00:00</span>
+        <div class="vol-group">
+          <span id="lblVolIcon">🔊</span>
+          <input type="range" id="sliderVolume" min="0" max="100" value="80">
+        </div>
+        <button class="ctl-btn" id="btnFullscreen">⛶ Toàn màn hình</button>
+      </div>
+      <div class="movie-meta-frame">
+        <div id="lblMovieTags">Thể loại: ... | Thời lượng: ... | Đánh giá: ⭐ .../10</div>
+        <div id="lblMovieDesc">Mô tả...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ===================== Helpers ===================== */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function openModal(html){
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="modal-overlay"><div class="modal-box">${html}</div></div>`;
+  const overlay=root.querySelector('.modal-overlay');
+  overlay.addEventListener('mousedown', e=>{ if(e.target===overlay) closeModal(); });
+  document.addEventListener('keydown', escHandler);
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; document.removeEventListener('keydown', escHandler); }
+function escHandler(e){ if(e.key==='Escape') closeModal(); }
+function showAlert(title,msg,onClose){
+  openModal(`<h3 class="modal-title">${esc(title)}</h3><p class="modal-msg">${esc(msg)}</p><div class="modal-actions"><button class="btn btn-accent" id="btnAlertOk">OK</button></div>`);
+  document.getElementById('btnAlertOk').onclick=()=>{ closeModal(); if(onClose) onClose(); };
+}
+function showConfirm(title,msg){
+  return new Promise(resolve=>{
+    openModal(`<h3 class="modal-title">${esc(title)}</h3><p class="modal-msg">${esc(msg)}</p><div class="modal-actions"><button class="btn" id="cfNo">Không</button><button class="btn btn-accent" id="cfYes">Có</button></div>`);
+    document.getElementById('cfNo').onclick=()=>{closeModal();resolve(false);};
+    document.getElementById('cfYes').onclick=()=>{closeModal();resolve(true);};
+  });
+}
+
+/* ===================== Data layer ===================== */
+const STORAGE_KEY='cinestream_data_v1';
+let DB=null;
+let localMovies=[]; // movies opened from local file this session (blob URLs, not persisted)
+
+const DEFAULT_MOVIES=[
+  {id:"m1",title:"Tears of Steel",category:"scifi",category_name:"Khoa học viễn tưởng",rating:8.7,year:2024,duration:"12 phút",banner_color:"#2D3748",emoji:"🦾",desc:"Trong một tương lai hậu tận thế, một nhóm chiến binh và nhà khoa học cố gắng cứu vãn nhân loại bằng cách kết nối lại quá khứ thông qua công nghệ trí tuệ nhân tạo và kỹ xảo điện ảnh đỉnh cao.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",is_favorite:true},
+  {id:"m2",title:"Big Buck Bunny",category:"animation",category_name:"Hoạt hình",rating:9.1,year:2023,duration:"10 phút",banner_color:"#1A365D",emoji:"🐰",desc:"Câu chuyện hài hước và ấm áp về chú thỏ khổng lồ tốt bụng và cuộc phiêu lưu bảo vệ những người bạn rừng xanh trước những kẻ trêu chọc tinh nghịch.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",is_favorite:true},
+  {id:"m3",title:"Sintel: Hành Trình Băng Giá",category:"animation",category_name:"Hoạt hình Phiêu lưu",rating:8.9,year:2024,duration:"15 phút",banner_color:"#4A154B",emoji:"🐉",desc:"Cô gái trẻ dũng cảm Sintel vượt qua bão tuyết và những miền đất nguy hiểm khắp lục địa để tìm lại chú rồng con Scales từng được cô cưu mang.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",is_favorite:false},
+  {id:"m4",title:"Bullrun: Đua Xe Nghẹt Thở",category:"action",category_name:"Hành động / Tốc độ",rating:8.4,year:2023,duration:"8 phút",banner_color:"#7B1113",emoji:"🏎️",desc:"Những màn rượt đuổi tốc độ cao trên đường cao tốc ven biển nghẹt thở giữa các tay đua cự phách tranh cúp vô địch mạo hiểm.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",is_favorite:false},
+  {id:"m5",title:"Elephant's Dream",category:"scifi",category_name:"Khoa học viễn tưởng",rating:8.0,year:2022,duration:"11 phút",banner_color:"#285E61",emoji:"⚙️",desc:"Hai nhân vật bước vào thế giới cơ khí khổng lồ huyền bí nơi mọi kiến trúc và quy luật vật lý đều biến đổi theo trí tưởng tượng của cỗ máy trung tâm.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",is_favorite:false},
+  {id:"m6",title:"For Bigger Blazes: Cuộc Vây Hãm",category:"action",category_name:"Hành động",rating:8.6,year:2024,duration:"15 phút",banner_color:"#744210",emoji:"🔥",desc:"Đội đặc nhiệm phản ứng nhanh phải thâm nhập vào khu căn cứ bí mật trên đỉnh núi tuyết để ngăn chặn một âm mưu toàn cầu.",video_url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",is_favorite:false}
+];
+const DEFAULT_USERS=[{username:"admin",password:"123"},{username:"333",password:"123456"}];
+
+function loadData(){
+  try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ DB=JSON.parse(raw); return true; } }catch(e){}
+  return false;
+}
+function saveData(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }catch(e){} }
+function initDB(){
+  if(!loadData() || !DB.users || !DB.users.length){
+    DB={ movies: JSON.parse(JSON.stringify(DEFAULT_MOVIES)), users: JSON.parse(JSON.stringify(DEFAULT_USERS)) };
+    saveData();
+  }
+}
+function allMovies(){ return [...localMovies, ...DB.movies]; }
+
+/* ===================== App state ===================== */
+let currentCategory='all';
+let currentMovie=null;
+let selectedAccount=null;
+let player=null; // <video> element
+let seeking=false;
+
+/* ===================== Auth screen ===================== */
+function renderAccountList(){
+  const list=document.getElementById('accountList');
+  list.innerHTML = DB.users.map(u=>`<div class="account-item ${selectedAccount===u.username?'selected':''}" data-u="${esc(u.username)}">👤 ${esc(u.username)}</div>`).join('');
+  list.querySelectorAll('.account-item').forEach(el=>el.addEventListener('click',()=>{
+    selectedAccount=el.dataset.u;
+    document.getElementById('txtUser').value=selectedAccount;
+    document.getElementById('txtPass').focus();
+    renderAccountList();
+  }));
+}
+function setAuthMsg(msg,isSuccess){
+  const el=document.getElementById('authMsg');
+  el.textContent=msg;
+  el.className='form-error'+(isSuccess?' success':'');
+}
+function handleLoginSubmit(){
+  const username=document.getElementById('txtUser').value.trim();
+  const password=document.getElementById('txtPass').value.trim();
+  if(!username || !password){ showAlert('Lỗi','Vui lòng nhập đầy đủ tên và mật khẩu!'); return; }
+  const found=DB.users.find(u=>u.username===username && u.password===password);
+  if(found){
+    showAlert('Thành công', `Chào mừng ${username} đã đăng nhập!`, openApp);
+  } else {
+    showAlert('Lỗi','Sai tên đăng nhập hoặc mật khẩu!');
+  }
+}
+function handleRegisterSubmit(){
+  const username=document.getElementById('txtUser').value.trim();
+  const password=document.getElementById('txtPass').value.trim();
+  if(!username || !password){ showAlert('Lỗi','Vui lòng nhập tên và mật khẩu cần đăng ký!'); return; }
+  if(DB.users.some(u=>u.username===username)){ showAlert('Lỗi','Tên đăng nhập này đã tồn tại!'); return; }
+  DB.users.push({username,password});
+  saveData();
+  renderAccountList();
+  showAlert('Thành công', `Đã đăng ký tài khoản '${username}' thành công!`);
+}
+async function handleDeleteUser(){
+  if(!selectedAccount){ showAlert('Thông báo','Vui lòng bấm chọn một tài khoản trong danh sách bên phải để xóa!'); return; }
+  if(selectedAccount==='admin'){ showAlert('Lỗi','Không thể xóa tài khoản admin mặc định!'); return; }
+  const ok=await showConfirm('Xác nhận xóa', `Bạn có chắc muốn xóa tài khoản '${selectedAccount}' không?`);
+  if(ok){
+    DB.users=DB.users.filter(u=>u.username!==selectedAccount);
+    saveData();
+    const removed=selectedAccount;
+    selectedAccount=null;
+    document.getElementById('txtUser').value='';
+    document.getElementById('txtPass').value='';
+    renderAccountList();
+    showAlert('Thành công', `Đã xóa tài khoản '${removed}' thành công!`);
+  }
+}
+
+/* ===================== App screen ===================== */
+function openApp(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  initPlayer();
+  loadMovies();
+}
+function initPlayer(){
+  const container=document.getElementById('videoContainer');
+  player=document.createElement('video');
+  player.setAttribute('playsinline','');
+  player.volume=0.8;
+  container.appendChild(player);
+  player.addEventListener('dblclick', toggleFullscreen);
+  player.addEventListener('timeupdate', onPositionChanged);
+  player.addEventListener('loadedmetadata', onDurationChanged);
+  player.addEventListener('play', ()=>{ document.getElementById('btnPlayPause').textContent='⏸ Tạm dừng'; });
+  player.addEventListener('pause', ()=>{ document.getElementById('btnPlayPause').textContent='▶ Phát'; });
+
+  document.getElementById('sliderProgress').addEventListener('mousedown', ()=>{ seeking=true; });
+  document.getElementById('sliderProgress').addEventListener('input', onSliderMoved);
+  document.getElementById('sliderProgress').addEventListener('change', ()=>{ seeking=false; });
+  document.getElementById('sliderVolume').addEventListener('input', e=>changeVolume(parseInt(e.target.value)));
+
+  document.addEventListener('keydown', e=>{
+    const tag=(document.activeElement && document.activeElement.tagName) || '';
+    if(tag==='INPUT' || tag==='TEXTAREA') return;
+    if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+    else if(e.key==='f' || e.key==='F'){ toggleFullscreen(); }
+    else if(e.key==='Escape' && document.fullscreenElement){ document.exitFullscreen(); }
+  });
+}
+function switchCategory(cat,btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  currentCategory=cat;
+  const titles={all:'🍿 Tất cả phim nổi bật',action:'💥 Phim Hành động kịch tính',scifi:'🚀 Phim Khoa học viễn tưởng',animation:'🎨 Phim Hoạt hình xuất sắc',fav:'⭐ Danh sách phim yêu thích của bạn'};
+  document.getElementById('lblCategoryHeader').textContent=titles[cat]||'Danh sách phim';
+  loadMovies();
+}
+function clearSearch(){ document.getElementById('txtSearch').value=''; loadMovies(); }
+function loadMovies(){
+  let list = currentCategory==='all' ? allMovies() : (currentCategory==='fav' ? allMovies().filter(m=>m.is_favorite) : allMovies().filter(m=>m.category===currentCategory));
+  const query=document.getElementById('txtSearch').value.trim().toLowerCase();
+  if(query) list=list.filter(m=>(m.title+' '+m.desc+' '+m.category_name).toLowerCase().includes(query));
+  const grid=document.getElementById('movieGrid');
+  if(!list.length){ grid.innerHTML=`<div class="empty-catalog">Không tìm thấy bộ phim nào phù hợp.</div>`; return; }
+  grid.innerHTML = list.map(m=>movieCardHtml(m)).join('');
+  grid.querySelectorAll('.movie-card').forEach(el=>el.addEventListener('click',()=>playMovie(el.dataset.id)));
+}
+function movieCardHtml(m){
+  return `<div class="movie-card" data-id="${esc(m.id)}">
+    <div class="mv-poster" style="background-color:${m.banner_color};">
+      <span class="mv-emoji">${m.emoji}</span>
+      <span class="mv-badge">4K UHD</span>
+    </div>
+    <div class="mv-title">${esc(m.title)}</div>
+    <div class="mv-meta"><span class="mv-rating">⭐ ${m.rating} | ${esc(m.duration)}</span><span class="mv-year">${m.year}</span></div>
+    <button class="mv-play">▶ Xem ngay</button>
+  </div>`;
+}
+function findMovie(id){ return allMovies().find(m=>m.id===id); }
+
+function playMovie(id){
+  const movie=findMovie(id);
+  if(!movie) return;
+  currentMovie=movie;
+  document.getElementById('lblMovieTitle').textContent=`🎬 Đang phát: ${movie.title}`;
+  document.getElementById('lblMovieTags').textContent=`Thể loại: ${movie.category_name} | Thời lượng: ${movie.duration} | Đánh giá: ⭐ ${movie.rating}/10`;
+  document.getElementById('lblMovieDesc').textContent=movie.desc || 'Không có mô tả chi tiết.';
+  document.getElementById('btnFavToggle').classList.toggle('active', !!movie.is_favorite);
+  document.getElementById('btnFavToggle').textContent = movie.is_favorite ? '⭐ Đã thích' : '☆ Thêm yêu thích';
+
+  document.getElementById('pageCatalog').classList.add('hidden');
+  document.getElementById('pagePlayer').classList.remove('hidden');
+
+  player.src=movie.video_url;
+  player.play().catch(()=>{});
+  document.getElementById('btnPlayPause').textContent='⏸ Tạm dừng';
+}
+function backToList(){
+  if(player) player.pause();
+  document.getElementById('btnPlayPause').textContent='▶ Phát';
+  document.getElementById('pagePlayer').classList.add('hidden');
+  document.getElementById('pageCatalog').classList.remove('hidden');
+}
+function togglePlay(){
+  if(!player || !player.src) return;
+  if(!player.paused){ player.pause(); } else { player.play().catch(()=>{}); }
+}
+function seekRelative(offsetMs){
+  if(!player) return;
+  const newPos=Math.max(0, Math.min(player.duration||0, player.currentTime + offsetMs/1000));
+  player.currentTime=newPos;
+}
+function changeVolume(value){
+  if(player) player.volume=value/100;
+  document.getElementById('lblVolIcon').textContent = value===0 ? '🔇' : '🔊';
+}
+function onPositionChanged(){
+  if(seeking || !player.duration) return;
+  document.getElementById('sliderProgress').value=Math.round((player.currentTime/player.duration)*1000);
+  updateTimeLabel();
+}
+function onDurationChanged(){ updateTimeLabel(); }
+function onSliderMoved(e){
+  if(!player.duration) return;
+  player.currentTime = (parseInt(e.target.value)/1000)*player.duration;
+}
+function updateTimeLabel(){
+  const pos=Math.floor(player.currentTime||0), dur=Math.floor(player.duration||0);
+  const f=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  document.getElementById('lblTime').textContent=`${f(pos)} / ${f(dur)}`;
+}
+function toggleFullscreen(){
+  const container=document.getElementById('videoContainer');
+  if(!document.fullscreenElement) container.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+function toggleCurrentFavorite(){
+  if(!currentMovie) return;
+  currentMovie.is_favorite=!currentMovie.is_favorite;
+  const persisted=DB.movies.find(m=>m.id===currentMovie.id);
+  if(persisted){ persisted.is_favorite=currentMovie.is_favorite; saveData(); }
+  document.getElementById('btnFavToggle').classList.toggle('active', currentMovie.is_favorite);
+  document.getElementById('btnFavToggle').textContent = currentMovie.is_favorite ? '⭐ Đã thích' : '☆ Thêm yêu thích';
+  if(currentCategory==='fav') loadMovies();
+}
+function openLocalFile(){ document.getElementById('fileInput').click(); }
+function handleFileChosen(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const url=URL.createObjectURL(file);
+  const custom={
+    id:`local_${Date.now()}`, title:file.name, category:'local', category_name:'Video từ máy tính',
+    rating:9.5, year:2026, duration:'Tùy chỉnh', banner_color:'#234E52', emoji:'📼',
+    desc:`File video từ máy: ${file.name}`, video_url:url, is_favorite:false
+  };
+  localMovies.unshift(custom);
+  switchCategory('all', document.querySelector('.nav-btn[data-cat="all"]'));
+  playMovie(custom.id);
+}
+
+/* ===================== Event bindings ===================== */
+function setupHandlers(){
+  document.getElementById('btnLogin').onclick=handleLoginSubmit;
+  document.getElementById('btnRegister').onclick=handleRegisterSubmit;
+  document.getElementById('txtPass').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLoginSubmit(); });
+  document.getElementById('btnDeleteUser').onclick=handleDeleteUser;
+
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchCategory(b.dataset.cat,b)));
+  document.getElementById('btnOpenFile').onclick=openLocalFile;
+  document.getElementById('fileInput').addEventListener('change', handleFileChosen);
+  document.getElementById('txtSearch').addEventListener('input', loadMovies);
+  document.getElementById('btnSearchClear').onclick=clearSearch;
+
+  document.getElementById('btnBack').onclick=backToList;
+  document.getElementById('btnPlayPause').onclick=togglePlay;
+  document.getElementById('btnRewind').onclick=()=>seekRelative(-10000);
+  document.getElementById('btnForward').onclick=()=>seekRelative(10000);
+  document.getElementById('btnFullscreen').onclick=toggleFullscreen;
+  document.getElementById('btnFavToggle').onclick=toggleCurrentFavorite;
+}
+
+/* ===================== Bootstrap ===================== */
+(function init(){
+  initDB();
+  renderAccountList();
+  setupHandlers();
+})();
+</script>
+</body>
+</html>
