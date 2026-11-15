@@ -20,6 +20,8 @@ button{cursor:pointer;font-family:inherit;}
 .auth-card{width:620px;max-width:100%;background:#1a1a1a;border-radius:10px;display:flex;gap:20px;padding:24px;}
 .auth-left{flex:1;display:flex;flex-direction:column;gap:12px;}
 .auth-title{text-align:center;font-size:16px;font-weight:800;color:var(--accent);}
+.auth-logo-img{display:block;margin:0 auto 10px;width:64px;height:64px;border-radius:14px;object-fit:cover;}
+.sidebar-logo-img{display:block;margin:0 auto 6px;width:40px;height:40px;border-radius:9px;object-fit:cover;}
 .auth-right{flex:1;display:flex;flex-direction:column;gap:8px;}
 .auth-right-label{font-weight:700;color:#aaa;font-size:12px;}
 .account-list{background:#2b2b2b;border:1px solid #444;border-radius:5px;padding:5px;flex:1;min-height:160px;overflow-y:auto;}
@@ -119,6 +121,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="authScreen" class="auth-wrap">
   <div class="auth-card">
     <div class="auth-left">
+      <img class="auth-logo-img" src="logo.jpg" alt="App Xem Phim $">
       <div class="auth-title">🎬 ĐĂNG NHẬP</div>
       <input type="text" id="txtUser" placeholder="Tên đăng nhập...">
       <input type="password" id="txtPass" placeholder="Mật khẩu...">
@@ -139,6 +142,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <!-- ===================== APP ===================== -->
 <div id="appScreen" class="hidden">
   <aside class="sidebar">
+    <img class="sidebar-logo-img" src="logo.jpg" alt="App Xem Phim $">
     <div class="sidebar-logo">🎬 CINEMA PTI</div>
     <hr class="sidebar-hr">
     <div class="sidebar-menu-title">KHÁM PHÁ</div>
